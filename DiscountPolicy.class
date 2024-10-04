@@ -1,0 +1,16 @@
+class DiscountPolicy {
+    private int id;
+    private String name;
+    private double percentage;
+    private double minOrderAmount;
+    private String conditionString;
+    private Condition condition;
+    private boolean changed;
+
+    // Constructor, getters, and setters
+
+    @Override
+    public String toString() {
+        return name;
+    }
+}
