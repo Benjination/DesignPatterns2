@@ -1,7 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.*;
-//import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +9,7 @@ public class DiscountPolicyApp extends JFrame {
     public DefaultListModel<String> listModel;
     private JList<String> list;
 
+    //GUI outline
     public DiscountPolicyApp() {
         setTitle("Discount Policy Application");
         setSize(600, 400);
@@ -23,18 +23,19 @@ public class DiscountPolicyApp extends JFrame {
         setVisible(true);
     }
 
+    //MenuBar
     private void createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
         
         JMenuItem newItem = new JMenuItem("New");
-        JMenuItem openItem = new JMenuItem("Open");
-        JMenuItem saveItem = new JMenuItem("Save");
+        //JMenuItem openItem = new JMenuItem("Open");
+        //JMenuItem saveItem = new JMenuItem("Save");
         JMenuItem exitItem = new JMenuItem("Exit");
         
         fileMenu.add(newItem);
-        fileMenu.add(openItem);
-        fileMenu.add(saveItem);
+        //fileMenu.add(openItem);
+        //fileMenu.add(saveItem);
         fileMenu.addSeparator();
         fileMenu.add(exitItem);
         
@@ -44,6 +45,7 @@ public class DiscountPolicyApp extends JFrame {
         exitItem.addActionListener(e -> System.exit(0));
     }
 
+    //Side Panel with buttons
     private void createSidePanel() {
         JPanel sidePanel = new JPanel();
         sidePanel.setLayout(new BoxLayout(sidePanel, BoxLayout.Y_AXIS));
@@ -66,6 +68,8 @@ public class DiscountPolicyApp extends JFrame {
         deleteButton.addActionListener(e -> deleteSelectedPolicy());
     }
 
+     //Main Window
+    //String Sample data will be updated with actual policies converted into Strings
     private void createMainContent() {
         listModel = new DefaultListModel<>();
         String[] sampleData = {"Policy 1", "Policy 2", "Policy 3", "Policy 4", "Policy 5",
@@ -202,7 +206,9 @@ class DiscountPolicyForm extends JDialog {
 
 class ListItemTransferHandler extends TransferHandler {
     private int[] indices = null;
+    @SuppressWarnings("unused")
     private int addIndex = -1; // Location where items were added
+    @SuppressWarnings("unused")
     private int addCount = 0;  // Number of items added
 
     @Override
