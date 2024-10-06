@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DiscountPolicyApp extends JFrame {
-    private DefaultListModel<String> listModel;
+    public DefaultListModel<String> listModel;
     private JList<String> list;
 
     public DiscountPolicyApp() {
@@ -61,16 +61,9 @@ public class DiscountPolicyApp extends JFrame {
 
         add(sidePanel, BorderLayout.WEST);
 
-        newButton.addActionListener(e -> 
-        System.out.println("New button clicked")
-        //Add button functionality
-        );
-        editButton.addActionListener(e -> System.out.println("Edit button clicked")
-        //Add Button Functionality
-        );
-        deleteButton.addActionListener(e -> System.out.println("Delete button clicked")
-        //Add Button Functionality
-        );
+        newButton.addActionListener(e -> new DiscountPolicyForm(this));
+        editButton.addActionListener(e -> editSelectedPolicy());
+        deleteButton.addActionListener(e -> deleteSelectedPolicy());
     }
 
     private void createMainContent() {
@@ -99,8 +92,111 @@ public class DiscountPolicyApp extends JFrame {
         listModel.addElement(item);
     }
 
+    private void editSelectedPolicy() {
+        int selectedIndex = list.getSelectedIndex();
+        if (selectedIndex == -1) {
+            JOptionPane.showMessageDialog(this, "No item selected!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        String selectedPolicy = listModel.get(selectedIndex);
+        new DiscountPolicyForm(this, selectedIndex, selectedPolicy); // Pass the selected policy to the form for editing
+    }
+
+    private void deleteSelectedPolicy() {
+        int selectedIndex = list.getSelectedIndex();
+        if (selectedIndex == -1) {
+            JOptionPane.showMessageDialog(this, "No item selected!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int response = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this policy?", "Confirm", JOptionPane.YES_NO_OPTION);
+        if (response == JOptionPane.YES_OPTION) {
+            listModel.remove(selectedIndex);
+        }
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new DiscountPolicyApp());
+    }
+}
+
+class DiscountPolicyForm extends JDialog {
+    private JTextField policyNameField;
+    private JComboBox<String> discountTypeField;
+    private JTextField discountValueField;
+    private JTextField minPurchaseField;
+    private JButton submitButton;
+    private DiscountPolicyApp parentApp;
+    private int editIndex = -1;  // To track if we are editing an existing policy
+
+    public DiscountPolicyForm(DiscountPolicyApp parentApp) {
+        this(parentApp, -1, null);
+    }
+
+    public DiscountPolicyForm(DiscountPolicyApp parentApp, int editIndex, String existingPolicy) {
+        this.parentApp = parentApp;
+        this.editIndex = editIndex;
+
+        setTitle(editIndex == -1 ? "Create New Discount Policy" : "Edit Discount Policy");
+        setSize(400, 300);
+        setLocationRelativeTo(parentApp);
+        setLayout(new GridLayout(5, 2));
+
+        add(new JLabel("Policy Name:"));
+        policyNameField = new JTextField();
+        add(policyNameField);
+
+        add(new JLabel("Discount Type:"));
+        String[] discountTypes = {"Percentage", "Fixed Amount", "Variable"};
+        discountTypeField = new JComboBox<>(discountTypes);
+        add(discountTypeField);
+
+        add(new JLabel("Discount Value:"));
+        discountValueField = new JTextField();
+        add(discountValueField);
+
+        add(new JLabel("Minimum Purchase:"));
+        minPurchaseField = new JTextField();
+        add(minPurchaseField);
+
+        submitButton = new JButton("Submit");
+        add(new JLabel());
+        add(submitButton);
+
+        submitButton.addActionListener(e -> submitForm());
+
+        if (existingPolicy != null) {
+            String[] parts = existingPolicy.split(" - |: | \\(Min Purchase: |\\)");
+            policyNameField.setText(parts[0]);
+            discountTypeField.setSelectedItem(parts[1]);
+            discountValueField.setText(parts[2]);
+            minPurchaseField.setText(parts[3]);
+        }
+
+        setModal(true);
+        setVisible(true);
+    }
+
+    private void submitForm() {
+        String policyName = policyNameField.getText();
+        String discountType = (String) discountTypeField.getSelectedItem();
+        String discountValue = discountValueField.getText();
+        String minPurchase = minPurchaseField.getText();
+
+        if (policyName.isEmpty() || discountValue.isEmpty() || minPurchase.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill all fields!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String policyDetails = policyName + " - " + discountType + ": " + discountValue + " (Min Purchase: " + minPurchase + ")";
+
+        if (editIndex == -1) {
+            parentApp.addItem(policyDetails); // Add a new policy
+        } else {
+            parentApp.listModel.set(editIndex, policyDetails); // Update the existing policy
+        }
+
+        dispose();
     }
 }
 
@@ -157,10 +253,10 @@ class ListItemTransferHandler extends TransferHandler {
                 }
                 listModel.remove(indices[i]);
             }
-            
-            // Insert the items at the new position
-            for (String item : toMove) {
-                listModel.add(index++, item);
+
+            // Add the items to their new positions
+            for (int i = 0; i < toMove.size(); i++) {
+                listModel.add(index++, toMove.get(i));
             }
             
             addIndex = index - toMove.size();
