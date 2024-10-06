@@ -4,6 +4,10 @@ import java.awt.datatransfer.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
 
 public class DiscountPolicyApp extends JFrame {
     public DefaultListModel<String> listModel;
@@ -12,14 +16,15 @@ public class DiscountPolicyApp extends JFrame {
     //GUI outline
     public DiscountPolicyApp() {
         setTitle("Discount Policy Application");
-        setSize(600, 400);
+        setSize(650, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-
+    
         createMenuBar();
         createSidePanel();
         createMainContent();
-
+    
+        loadPolicies();
         setVisible(true);
     }
 
@@ -27,21 +32,17 @@ public class DiscountPolicyApp extends JFrame {
     private void createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
-        
         JMenuItem newItem = new JMenuItem("New");
-        //JMenuItem openItem = new JMenuItem("Open");
-        //JMenuItem saveItem = new JMenuItem("Save");
         JMenuItem exitItem = new JMenuItem("Exit");
-        
+    
         fileMenu.add(newItem);
-        //fileMenu.add(openItem);
-        //fileMenu.add(saveItem);
         fileMenu.addSeparator();
         fileMenu.add(exitItem);
-        
+    
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
-
+    
+        newItem.addActionListener(e -> new DiscountPolicyForm(this));
         exitItem.addActionListener(e -> System.exit(0));
     }
 
@@ -50,26 +51,61 @@ public class DiscountPolicyApp extends JFrame {
         JPanel sidePanel = new JPanel();
         sidePanel.setLayout(new BoxLayout(sidePanel, BoxLayout.Y_AXIS));
         sidePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
+    
         JButton newButton = new JButton("New");
         JButton editButton = new JButton("Edit");
         JButton deleteButton = new JButton("Delete");
-
+        JButton saveButton = new JButton("Save");
+        //JButton loadButton = new JButton("Load");
+    
         sidePanel.add(newButton);
         sidePanel.add(Box.createRigidArea(new Dimension(0, 10)));
         sidePanel.add(editButton);
         sidePanel.add(Box.createRigidArea(new Dimension(0, 10)));
         sidePanel.add(deleteButton);
-
+        sidePanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        sidePanel.add(saveButton);
+        sidePanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        //sidePanel.add(loadButton);
+    
         add(sidePanel, BorderLayout.WEST);
-
+    
         newButton.addActionListener(e -> new DiscountPolicyForm(this));
         editButton.addActionListener(e -> editSelectedPolicy());
         deleteButton.addActionListener(e -> deleteSelectedPolicy());
+        saveButton.addActionListener(e -> savePolicies());
+        //loadButton.addActionListener(e -> loadPolicies());
     }
 
      //Main Window
     //String Sample data will be updated with actual policies converted into Strings
+
+    private static final String SAVE_FILE = "discount_policies.txt";
+
+    public void savePolicies() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(SAVE_FILE))) {
+            for (int i = 0; i < listModel.size(); i++) {
+                writer.write(listModel.get(i).toString());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error saving policies", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public void loadPolicies() {
+        listModel.clear();
+        try (BufferedReader reader = new BufferedReader(new FileReader(SAVE_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                listModel.addElement(line);
+            }
+        } catch (IOException e) {
+            // File might not exist yet, which is fine for the first run
+            System.out.println("No existing policies found. Starting with an empty list.");
+        }
+    }
     private void createMainContent() {
         listModel = new DefaultListModel<>();
         String[] sampleData = {"Policy 1", "Policy 2", "Policy 3", "Policy 4", "Policy 5",
@@ -94,6 +130,7 @@ public class DiscountPolicyApp extends JFrame {
     // Method to add a new item to the list
     public void addItem(String item) {
         listModel.addElement(item);
+        savePolicies(); // Save after adding a new item
     }
 
     private void editSelectedPolicy() {
@@ -102,8 +139,9 @@ public class DiscountPolicyApp extends JFrame {
             JOptionPane.showMessageDialog(this, "No item selected!", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        String selectedPolicy = listModel.get(selectedIndex);
-        new DiscountPolicyForm(this, selectedIndex, selectedPolicy); // Pass the selected policy to the form for editing
+        String selectedPolicy = listModel.get(selectedIndex).toString();
+        new DiscountPolicyForm(this, selectedIndex, selectedPolicy);
+        savePolicies(); // Save after editing
     }
 
     private void deleteSelectedPolicy() {
@@ -112,10 +150,10 @@ public class DiscountPolicyApp extends JFrame {
             JOptionPane.showMessageDialog(this, "No item selected!", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
         int response = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this policy?", "Confirm", JOptionPane.YES_NO_OPTION);
         if (response == JOptionPane.YES_OPTION) {
             listModel.remove(selectedIndex);
+            savePolicies(); // Save after deleting
         }
     }
 
@@ -193,14 +231,15 @@ class DiscountPolicyForm extends JDialog {
         }
 
         String policyDetails = policyName + " - " + discountType + ": " + discountValue + " (Min Purchase: " + minPurchase + ")";
+    if (editIndex == -1) {
+        parentApp.addItem(policyDetails); // This will now save the policies
+    } else {
+        parentApp.listModel.set(editIndex, policyDetails);
+        parentApp.savePolicies(); // Save after editing
+    }
 
-        if (editIndex == -1) {
-            parentApp.addItem(policyDetails); // Add a new policy
-        } else {
-            parentApp.listModel.set(editIndex, policyDetails); // Update the existing policy
-        }
-
-        dispose();
+    dispose();
+    
     }
 }
 
