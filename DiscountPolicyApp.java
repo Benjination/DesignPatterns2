@@ -12,52 +12,59 @@ import java.io.FileWriter;
 public class DiscountPolicyApp extends JFrame {
     public DefaultListModel<String> listModel;
     private JList<String> list;
+    private List<Order> userPurchases = new ArrayList<>();
+    private JLabel totalLabel;
 
-    //GUI outline
+    // GUI outline
     public DiscountPolicyApp() {
         setTitle("Discount Policy Application");
         setSize(650, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-    
+
         createMenuBar();
         createSidePanel();
         createMainContent();
-    
+
         loadPolicies();
         setVisible(true);
     }
 
-    //MenuBar
+    // MenuBar
     private void createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
         JMenuItem newItem = new JMenuItem("New");
         JMenuItem exitItem = new JMenuItem("Exit");
-    
+
         fileMenu.add(newItem);
         fileMenu.addSeparator();
         fileMenu.add(exitItem);
-    
+
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
-    
+
         newItem.addActionListener(e -> new DiscountPolicyForm(this));
         exitItem.addActionListener(e -> System.exit(0));
     }
 
-    //Side Panel with buttons
+    // Side Panel with buttons
     private void createSidePanel() {
         JPanel sidePanel = new JPanel();
         sidePanel.setLayout(new BoxLayout(sidePanel, BoxLayout.Y_AXIS));
         sidePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-    
+
         JButton newButton = new JButton("New");
         JButton editButton = new JButton("Edit");
         JButton deleteButton = new JButton("Delete");
         JButton saveButton = new JButton("Save");
-        //JButton loadButton = new JButton("Load");
-    
+        JButton purchaseButton = new JButton("Purchase");
+        JButton viewPurchasesButton = new JButton("View Purchases");
+        // JButton loadButton = new JButton("Load");
+
+        totalLabel = new JLabel("Total: $0.00"); // Label to show the total cost
+        totalLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         sidePanel.add(newButton);
         sidePanel.add(Box.createRigidArea(new Dimension(0, 10)));
         sidePanel.add(editButton);
@@ -66,19 +73,28 @@ public class DiscountPolicyApp extends JFrame {
         sidePanel.add(Box.createRigidArea(new Dimension(0, 10)));
         sidePanel.add(saveButton);
         sidePanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        //sidePanel.add(loadButton);
-    
+        sidePanel.add(purchaseButton);
+        sidePanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        sidePanel.add(viewPurchasesButton);
+        sidePanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        sidePanel.add(totalLabel);
+        sidePanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        // sidePanel.add(loadButton);
+
         add(sidePanel, BorderLayout.WEST);
-    
+
         newButton.addActionListener(e -> new DiscountPolicyForm(this));
         editButton.addActionListener(e -> editSelectedPolicy());
         deleteButton.addActionListener(e -> deleteSelectedPolicy());
         saveButton.addActionListener(e -> savePolicies());
-        //loadButton.addActionListener(e -> loadPolicies());
+        purchaseButton.addActionListener(e -> handlePurchase());
+        viewPurchasesButton.addActionListener(e -> viewPurchases()); // Attach action to "View Purchases" button
+        // loadButton.addActionListener(e -> loadPolicies());
     }
 
-     //Main Window
-    //String Sample data will be updated with actual policies converted into Strings
+    // Main Window
+    // String Sample data will be updated with actual policies converted into
+    // Strings
 
     private static final String SAVE_FILE = "discount_policies.txt";
 
@@ -106,10 +122,11 @@ public class DiscountPolicyApp extends JFrame {
             System.out.println("No existing policies found. Starting with an empty list.");
         }
     }
+
     private void createMainContent() {
         listModel = new DefaultListModel<>();
-        String[] sampleData = {"Policy 1", "Policy 2", "Policy 3", "Policy 4", "Policy 5",
-                               "Policy 6", "Policy 7", "Policy 8", "Policy 9", "Policy 10"};
+        String[] sampleData = { "Policy 1", "Policy 2", "Policy 3", "Policy 4", "Policy 5",
+                "Policy 6", "Policy 7", "Policy 8", "Policy 9", "Policy 10" };
         for (String item : sampleData) {
             listModel.addElement(item);
         }
@@ -150,11 +167,48 @@ public class DiscountPolicyApp extends JFrame {
             JOptionPane.showMessageDialog(this, "No item selected!", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        int response = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this policy?", "Confirm", JOptionPane.YES_NO_OPTION);
+        int response = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this policy?", "Confirm",
+                JOptionPane.YES_NO_OPTION);
         if (response == JOptionPane.YES_OPTION) {
             listModel.remove(selectedIndex);
             savePolicies(); // Save after deleting
         }
+    }
+
+    private void handlePurchase() {
+        PurchaseForm purchaseForm = new PurchaseForm(this);
+        Order order = purchaseForm.getOrder();
+
+        if (order != null) {
+            userPurchases.add(order);
+            JOptionPane.showMessageDialog(this, "Purchase added successfully!", "Purchase Added",
+                    JOptionPane.INFORMATION_MESSAGE);
+            updateTotal();
+        }
+    }
+
+    private void viewPurchases() {
+        if (userPurchases.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No purchases made yet.", "View Purchases",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        StringBuilder purchasesInfo = new StringBuilder("User Purchases:\n");
+        for (Order order : userPurchases) {
+            purchasesInfo.append("Items: ").append(order.getNumberOfItems())
+                    .append(", This Order Total Cost: $").append(order.getTotalCost())
+                    .append(", New Customer: ").append(order.isNewCustomer() ? "Yes" : "No")
+                    .append("\n");
+        }
+
+        JOptionPane.showMessageDialog(this, purchasesInfo.toString(), "View Purchases",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void updateTotal() {
+        double total = userPurchases.stream().mapToDouble(Order::getTotalCost).sum();
+        totalLabel.setText(String.format("Total: $%.2f", total));
     }
 
     public static void main(String[] args) {
@@ -169,7 +223,7 @@ class DiscountPolicyForm extends JDialog {
     private JTextField minPurchaseField;
     private JButton submitButton;
     private DiscountPolicyApp parentApp;
-    private int editIndex = -1;  // To track if we are editing an existing policy
+    private int editIndex = -1; // To track if we are editing an existing policy
 
     public DiscountPolicyForm(DiscountPolicyApp parentApp) {
         this(parentApp, -1, null);
@@ -189,7 +243,7 @@ class DiscountPolicyForm extends JDialog {
         add(policyNameField);
 
         add(new JLabel("Discount Type:"));
-        String[] discountTypes = {"Percentage", "Fixed Amount", "Variable"};
+        String[] discountTypes = { "Percentage", "Fixed Amount", "Variable" };
         discountTypeField = new JComboBox<>(discountTypes);
         add(discountTypeField);
 
@@ -230,16 +284,69 @@ class DiscountPolicyForm extends JDialog {
             return;
         }
 
-        String policyDetails = policyName + " - " + discountType + ": " + discountValue + " (Min Purchase: " + minPurchase + ")";
-    if (editIndex == -1) {
-        parentApp.addItem(policyDetails); // This will now save the policies
-    } else {
-        parentApp.listModel.set(editIndex, policyDetails);
-        parentApp.savePolicies(); // Save after editing
+        String policyDetails = policyName + " - " + discountType + ": " + discountValue + " (Min Purchase: "
+                + minPurchase + ")";
+        if (editIndex == -1) {
+            parentApp.addItem(policyDetails); // This will now save the policies
+        } else {
+            parentApp.listModel.set(editIndex, policyDetails);
+            parentApp.savePolicies(); // Save after editing
+        }
+
+        dispose();
+
+    }
+}
+
+class PurchaseForm extends JDialog {
+    private JTextField numberOfItemsField;
+    private JTextField CostPerItemField;
+    private JCheckBox newCustomerCheckbox;
+    private JButton submitButton;
+    private Order createdOrder;
+
+    public PurchaseForm(JFrame parent) {
+        setTitle("Purchase Information");
+        setSize(300, 200);
+        setLocationRelativeTo(parent);
+        setLayout(new GridLayout(4, 2));
+
+        add(new JLabel("Number of Items:"));
+        numberOfItemsField = new JTextField();
+        add(numberOfItemsField);
+
+        add(new JLabel("Cost per item:"));
+        CostPerItemField = new JTextField();
+        add(CostPerItemField);
+
+        add(new JLabel("New Customer:"));
+        newCustomerCheckbox = new JCheckBox();
+        add(newCustomerCheckbox);
+
+        submitButton = new JButton("Submit");
+        add(new JLabel());
+        add(submitButton);
+
+        submitButton.addActionListener(e -> {
+            try {
+                int numberOfItems = Integer.parseInt(numberOfItemsField.getText());
+                double CostPerItem = Double.parseDouble(CostPerItemField.getText());
+                double totalCost = numberOfItems * CostPerItem;
+                boolean isNewCustomer = newCustomerCheckbox.isSelected();
+                createdOrder = new Order(numberOfItems, totalCost, isNewCustomer);
+                dispose();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Please enter valid numbers for items and total cost", "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        setModal(true);
+        setVisible(true);
     }
 
-    dispose();
-    
+    public Order getOrder() {
+        return createdOrder;
     }
 }
 
@@ -248,7 +355,7 @@ class ListItemTransferHandler extends TransferHandler {
     @SuppressWarnings("unused")
     private int addIndex = -1; // Location where items were added
     @SuppressWarnings("unused")
-    private int addCount = 0;  // Number of items added
+    private int addCount = 0; // Number of items added
 
     @Override
     protected Transferable createTransferable(JComponent c) {
@@ -284,13 +391,13 @@ class ListItemTransferHandler extends TransferHandler {
         try {
             String data = (String) support.getTransferable().getTransferData(DataFlavor.stringFlavor);
             String[] values = data.split("\n");
-            
+
             // Store the items to be moved
             List<String> toMove = new ArrayList<>();
             for (String value : values) {
                 toMove.add(value);
             }
-            
+
             // Remove the items from their original positions
             for (int i = indices.length - 1; i >= 0; i--) {
                 if (indices[i] < index) {
@@ -303,7 +410,7 @@ class ListItemTransferHandler extends TransferHandler {
             for (int i = 0; i < toMove.size(); i++) {
                 listModel.add(index++, toMove.get(i));
             }
-            
+
             addIndex = index - toMove.size();
             addCount = toMove.size();
             return true;

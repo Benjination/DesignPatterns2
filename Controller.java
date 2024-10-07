@@ -121,6 +121,26 @@ interface Condition {
 }
 
 class Order {
-    // Define order properties and methods
-}
+    private int numberOfItems;
+    private double thisOrderTotalCost;
+    private boolean isNewCustomer;
 
+    public Order(int numberOfItems, double thisOrderTotalCost, boolean isNewCustomer) {
+        this.numberOfItems = numberOfItems;
+        this.thisOrderTotalCost = thisOrderTotalCost;
+        this.isNewCustomer = isNewCustomer;
+    }
+
+    // Getters for accessing the fields
+    public int getNumberOfItems() {
+        return numberOfItems;
+    }
+
+    public double getTotalCost() {
+        return thisOrderTotalCost;
+    }
+
+    public boolean isNewCustomer() {
+        return isNewCustomer;
+    }
+}
