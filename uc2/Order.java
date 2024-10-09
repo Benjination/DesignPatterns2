@@ -1,8 +1,9 @@
+package uc2;
 // Order.java
-package com.designpatters.uc2;
 
 
-import com.designpatters.uc2.Order;
+
+import uc2.Order;
 
 public class Order {
     private int numberOfItems;

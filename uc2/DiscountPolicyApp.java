@@ -1,8 +1,10 @@
-package com.designpatters.uc2;
+package uc2;
+
 
 //import com.designpatters.uc2.DiscountPolicy;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.io.*;

@@ -1,7 +1,8 @@
-package com.designpatters.uc2;
+package uc2;
 
 
-import com.designpatters.uc2.DPolicy;
+
+import uc2.DPolicy;
 
 public class DPolicy {
     private String name;

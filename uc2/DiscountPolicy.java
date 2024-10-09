@@ -1,4 +1,5 @@
-package com.designpatters.uc2;
+package uc2;
+
 
 
 public class DiscountPolicy {

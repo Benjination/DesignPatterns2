@@ -1,4 +1,4 @@
-package com.designpatters.uc2;
+package uc2;
 
 import java.util.List;
 
