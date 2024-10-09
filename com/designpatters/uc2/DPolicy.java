@@ -1,3 +1,8 @@
+package com.designpatters.uc2;
+
+
+import com.designpatters.uc2.DPolicy;
+
 public class DPolicy {
     private String name;
     private String discountType;

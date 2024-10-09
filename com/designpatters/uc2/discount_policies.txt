@@ -1,0 +1,2 @@
+Ben's Discount,Fixed Amount,100.0,500.0
+Other,Percentage,15.0,200.0
